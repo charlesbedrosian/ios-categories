@@ -10,7 +10,7 @@
 
 @interface UIView (Toast)
 
-- (void) toastWithMessage:(NSString*)text;
-- (void) toastWithMessage:(NSString*)text displayForSeconds:(CGFloat)time;
+- (void)toastWithMessage:(NSString*)text;
+- (void)toastWithMessage:(NSString*)text displayForSeconds:(CGFloat)time;
 
 @end

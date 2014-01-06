@@ -10,8 +10,6 @@
 
 @interface UIView (Resize)
 
-- (void)logBoundsAndFrameCourtesyOfBracken;
-
 - (void)setWidth:(CGFloat)newWidth;
 - (void)setHeight:(CGFloat)newHeight;
 - (void)setX:(CGFloat)newX;

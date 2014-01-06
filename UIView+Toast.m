@@ -11,11 +11,11 @@
 
 @implementation UIView (Toast)
 
-- (void) toastWithMessage:(NSString*)text {
+- (void)toastWithMessage:(NSString*)text {
     [self toastWithMessage:text displayForSeconds:3.0f];
 }
 
-- (void) toastWithMessage:(NSString*)text displayForSeconds:(CGFloat)time {
+- (void)toastWithMessage:(NSString*)text displayForSeconds:(CGFloat)time {
     MBProgressHUD *hud = [[MBProgressHUD alloc] initWithView:self];
     hud.labelText = text;
     hud.removeFromSuperViewOnHide = YES;

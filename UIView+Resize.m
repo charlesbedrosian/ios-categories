@@ -10,12 +10,6 @@
 
 @implementation UIView (Resize)
 
-- (void)logBoundsAndFrameCourtesyOfBracken {
-    DLog(@"%@", NSStringFromClass([self class]));
-    DLog(@"    bounds: %@", NSStringFromCGRect(self.bounds));
-    DLog(@"     frame: %@", NSStringFromCGRect(self.frame));
-}
-
 - (CGRect)fillFrame {
     return CGRectMake(0.0f,0.0f,self.width, self.height);
 }

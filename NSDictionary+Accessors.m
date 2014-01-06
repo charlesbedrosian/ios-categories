@@ -7,7 +7,7 @@
 //
 
 #import "NSDictionary+Accessors.h"
-#import "NSString+Yappem.h"
+#import "NSString+Helpers.h"
 
 @implementation NSDictionary (Accessors)
 
