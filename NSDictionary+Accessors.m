@@ -45,6 +45,9 @@
             return value;
         return (NSString *)self[key];
     }
+    if ([self[key] isKindOfClass:[NSNumber class]]) {
+        return [NSString stringWithFormat:@"%@", self[key]];
+    }
     return value;
 }
 
