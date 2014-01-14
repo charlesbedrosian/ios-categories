@@ -24,5 +24,6 @@
 @interface Formatters : NSObject 
 
 + (NSString *)prettyInt:(int)i;
++ (NSString *)prettyTimestamp:(NSDate *)timestamp;
 
 @end

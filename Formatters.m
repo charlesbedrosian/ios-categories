@@ -61,4 +61,14 @@
     
 }
 
++ (NSString *)prettyTimestamp:(NSDate *)timestamp {
+    static NSDateFormatter *formatter = nil;
+    if (!formatter) {
+        formatter = [[NSDateFormatter alloc] init];
+        formatter.dateStyle = NSDateFormatterShortStyle;
+        formatter.timeStyle = NSDateFormatterShortStyle;
+    }
+    return [formatter stringFromDate:timestamp];
+}
+
 @end
