@@ -9,7 +9,7 @@
 #import "NSString+Helpers.h"
 #import <Foundation/Foundation.h>
 
-@implementation NSString (Yappem)
+@implementation NSString (Helpers)
 
 - (NSDate *)dateFromWebServiceString {
     return [self dateFromWebServiceStringUsingDefault:[NSDate dateWithTimeIntervalSince1970:0]];

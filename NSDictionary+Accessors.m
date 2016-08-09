@@ -7,20 +7,39 @@
 //
 
 #import "NSDictionary+Accessors.h"
-#import "NSString+Helpers.h"
+#import "NSString+Convenience.h"
+#import <UIKit/UIKit.h>
 
 @implementation NSDictionary (Accessors)
 
+static NSNumberFormatter *_doubleFormatter;
++ (NSNumberFormatter *)doubleFormatter {
+    if (!_doubleFormatter) {
+        _doubleFormatter = [[NSNumberFormatter alloc] init];
+        _doubleFormatter.numberStyle = NSNumberFormatterDecimalStyle;
+    }
+    return _doubleFormatter;
+}
+
 - (BOOL)containsKey:(NSString *)key {
     if (!self[key]) {
-//        NSLog(@"Key %@ not found in dictionary %@", key, self);
+        //        DDLogDebug(@"Key %@ not found in dictionary %@", key, self);
         return NO;
     }
     if ([self[key] isKindOfClass:[NSNull class]]) {
-//        NSLog(@"Key %@ not found in dictionary %@", key, self);
+        //        DDLogDebug(@"Key %@ not found in dictionary %@", key, self);
         return NO;
     }
     return YES;
+}
+
+- (NSString *)keyIfExists:(NSString *)key {
+    NSArray *matchingKeys = [self.allKeys filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"SELF like[cd] %@", key]];
+    if (matchingKeys.count == 1)
+    {
+        return matchingKeys[0];
+    }
+    return nil;
 }
 
 
@@ -29,8 +48,9 @@
 }
 - (NSString *)stringForKeys:(NSArray *)keys defaultValue:(NSString *)value {
     for(NSString *key in keys) {
-        if ([self containsKey:key]) {
-            return [self stringForKey:key defaultValue:value];
+        NSString *realKey = [self keyIfExists:key];
+        if (realKey) {
+            return [self stringForKey:realKey defaultValue:value];
         }
     }
     return value;
@@ -39,7 +59,8 @@
     return [self stringForKey:key defaultValue:@""];
 }
 - (NSString *)stringForKey:(NSString *)key defaultValue:(NSString *)value {
-    if (![self containsKey:key]) return value;
+    key = [self keyIfExists:key];
+    if (!key) return value;
     if ([self[key] isKindOfClass:[NSString class]]) {
         if ([[self[key] lowercaseString] isEqualToString:@"null"])
             return value;
@@ -56,8 +77,9 @@
 }
 - (BOOL)boolForKeys:(NSArray *)keys defaultValue:(BOOL)value {
     for(NSString *key in keys){
-        if ([self containsKey:key])
-            return [self boolForKey:key defaultValue:value];
+        NSString *realKey = [self keyIfExists:key];
+        if (realKey)
+            return [self boolForKey:realKey defaultValue:value];
     }
     return value;
 }
@@ -66,10 +88,19 @@
     return [self boolForKey:key defaultValue:FALSE];
 }
 - (BOOL)boolForKey:(NSString *)key defaultValue:(BOOL)value {
-    if (![self containsKey:key]) return value;
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
     if ([self[key] isKindOfClass:[NSString class]]) {
+        if ([self[key] isEqualToString:@"1"])  return TRUE;
+        if ([self[key] isEqualToString:@"0"])  return FALSE;
+
         if ([self[key] caseInsensitiveCompare:@"true"])  return TRUE;
         if ([self[key] caseInsensitiveCompare:@"false"]) return FALSE;
+
+        if ([self[key] caseInsensitiveCompare:@"yes"])  return TRUE;
+        if ([self[key] caseInsensitiveCompare:@"no"]) return FALSE;
+        
         return value;
     }
     if ([self[key] isKindOfClass:[NSNumber class]]) {
@@ -82,7 +113,9 @@
     return [self numberForKey:key defaultValue:@0];
 }
 - (NSNumber *)numberForKey:(NSString *)key defaultValue:(NSNumber *)value {
-    if (![self containsKey:key]) return value;
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
     if ([self[key] isKindOfClass:[NSNumber class]]) {
         return ((NSNumber *)self[key]);
     }
@@ -93,7 +126,9 @@
     return [self integerForKey:key defaultValue:0];
 }
 - (NSInteger)integerForKey:(NSString *)key defaultValue:(NSInteger)value {
-    if (![self containsKey:key]) return value;
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
     if ([self[key] isKindOfClass:[NSNumber class]]) {
         return [(NSNumber *)self[key] integerValue];
     }
@@ -104,7 +139,9 @@
     return [self uintegerForKey:key defaultValue:0];
 }
 - (NSUInteger) uintegerForKey:(NSString *)key defaultValue:(NSUInteger)value {
-    if (![self containsKey:key]) return value;
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
     if ([self[key] isKindOfClass:[NSNumber class]]) {
         return [(NSNumber *)self[key] unsignedIntegerValue];
     }
@@ -112,14 +149,23 @@
 }
 
 - (int)intForKey:(NSString *)key {
-    return [self intForKey:key defaultValue:0];   
+    return [self intForKey:key defaultValue:0];
 }
 - (int)intForKey:(NSString *)key defaultValue:(int)value {
-    if (![self containsKey:key]) return value;
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
     if ([self[key] isKindOfClass:[NSNumber class]]) {
         return [(NSNumber *)self[key] intValue];
     }
     return value;
+}
+
+- (NSDate *) dateForKeyWithoutTimezone:(NSString *)key {
+    NSString *dateString = [self stringForKey:key defaultValue:nil];
+    if (!dateString)
+        return nil;
+    return [dateString dateFromWebServiceStringIgnoringTimezone];
 }
 
 - (NSDate *) dateForKey:(NSString *)key {
@@ -133,7 +179,9 @@
 }
 
 - (NSArray *)arrayForKey:(NSString *)key {
-    if (![self containsKey:key]) return @[];
+    key = [self keyIfExists:key];
+    if (!key) return @[];
+    
     if ([self[key] isKindOfClass:[NSArray class]]) {
         return (NSArray *) self[key];
     }
@@ -141,7 +189,9 @@
 }
 
 - (NSDictionary *)dictionaryForKey:(NSString *)key {
-    if (![self containsKey:key]) return @{};
+    key = [self keyIfExists:key];
+    if (!key) return @{};
+    
     if ([self[key] isKindOfClass:[NSDictionary class]]) {
         return (NSDictionary *) self[key];
     }
@@ -169,5 +219,91 @@
     return nil;
 }
 
+- (CGFloat)floatForKey:(NSString *)key {
+    return [self floatForKey:key defaultValue:0.0f];
+}
+- (CGFloat)floatForKey:(NSString *)key defaultValue:(CGFloat)value {
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
+    if ([self[key] isKindOfClass:[NSNumber class]]) {
+        return [(NSNumber *)self[key] floatValue];
+    }
+    NSNumberFormatter *f = [[self class] doubleFormatter];
+    NSNumber *n = [f numberFromString:self[key]];
+    if (n) {
+        return [n floatValue];
+    }
+    return value;
+}
+
+- (double)doubleForKey:(NSString *)key {
+    return [self doubleForKey:key defaultValue:0.0];
+}
+- (double)doubleForKey:(NSString *)key defaultValue:(double)value {
+    key = [self keyIfExists:key];
+    if (!key) return value;
+    
+    if ([self[key] isKindOfClass:[NSNumber class]]) {
+        return [(NSNumber *)self[key] doubleValue];
+    }
+    
+    if ([self[key] isKindOfClass:[NSString class]]) {
+        return [self[key] doubleValue];
+    }
+    
+    NSNumberFormatter *f = [[self class] doubleFormatter];
+    NSNumber *n = [f numberFromString:self[key]];
+    if (n) {
+        return [n doubleValue];
+    }
+    return value;
+}
+
++ (NSDictionary*)loadFromFileInBundle:(NSString*)fileLocation {
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:[fileLocation stringByDeletingPathExtension]
+                                                         ofType:[fileLocation pathExtension]];
+    NSData* data = [NSData dataWithContentsOfFile:filePath];
+    __autoreleasing NSError* error = nil;
+    id result = [NSJSONSerialization JSONObjectWithData:data
+                                                options:kNilOptions error:&error];
+    if (error != nil) return nil;
+    return result;
+}
+
++ (NSDictionary*)loadFromFileURL:(NSURL*)fileLocationURL {
+    id result = nil;
+    NSData* data = [NSData dataWithContentsOfURL:fileLocationURL];
+    if (data) {
+        __autoreleasing NSError* error = nil;
+        result = [NSJSONSerialization JSONObjectWithData:data
+                                                    options:kNilOptions error:&error];
+        if (error != nil) return nil;
+    }
+    if (![result isKindOfClass:[NSDictionary class]]) {
+        result = nil;
+    }
+    return result;
+}
+
+- (NSString *)stringForPath:(NSString *)path {
+    return [self stringForPath:path defaultValue:@""];
+}
+
+- (NSString *)stringForPath:(NSString *)path defaultValue:(NSString *)value {
+    NSDictionary *section = self;
+    NSArray *parts = [path componentsSeparatedByString:@"/"];
+    int index = 0;
+    while (index < parts.count - 1) {
+        NSString *key = parts[index];
+        section = [section dictionaryForKey:key];
+        if (!section) {
+            return value;
+        }
+        index++;
+    }
+    return [section stringForKey:[parts lastObject] defaultValue:value];
+}
 
 @end
+
